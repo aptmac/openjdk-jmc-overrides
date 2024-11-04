@@ -136,19 +136,14 @@ jobs:
           PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
         working-directory: agent
 
-      - name: Build
+      - name: Build & test
         run: |
           mvn clean
           mvn p2:site
           mvn jetty:run &
           cd ../../
-          mvn package
+          mvn verify
         working-directory: releng/third-party
-
-      - name: Run Unit Tests
-        uses: coactions/setup-xvfb@b6b4fcfb9f5a895edadc3bc76318fae0ac17c8b3 # v1.0.1
-        with:
-          run: mvn verify
 
       - name: Run UI Tests
         # Ignore UI failures for now
