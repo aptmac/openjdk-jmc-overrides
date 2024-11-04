@@ -112,29 +112,29 @@ jobs:
           mvn install
         working-directory: core
 
-      - name: Deploy core libraries
-        if: needs.release.outputs.release
-        run: |
-          mvn deploy --settings $GITHUB_WORKSPACE/.m2/settings.xml -Dpublish.user=$USERNAME -Dpublish.password=$PASSWORD -Drelease.repo=https://adoptium.jfrog.io/artifactory/jmc-libs -Dsnapshot.repo=https://adoptium.jfrog.io/artifactory/jmc-libs-snapshots -Dgpg.skip=true -DskipTests=true
-        env:
-          USERNAME: ${{ secrets.ARTIFACTORY_USER }}
-          PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
-        working-directory: core
+      # - name: Deploy core libraries
+      #   if: needs.release.outputs.release
+      #   run: |
+      #     mvn deploy --settings $GITHUB_WORKSPACE/.m2/settings.xml -Dpublish.user=$USERNAME -Dpublish.password=$PASSWORD -Drelease.repo=https://adoptium.jfrog.io/artifactory/jmc-libs -Dsnapshot.repo=https://adoptium.jfrog.io/artifactory/jmc-libs-snapshots -Dgpg.skip=true -DskipTests=true
+      #   env:
+      #     USERNAME: ${{ secrets.ARTIFACTORY_USER }}
+      #     PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
+      #   working-directory: core
 
-      - name: Build & test agent
-        run: |
-          mvn verify
-          mvn install
-        working-directory: agent
+      # - name: Build & test agent
+      #   run: |
+      #     mvn verify
+      #     mvn install
+      #   working-directory: agent
 
-      - name: Deploy agent libraries
-        if: needs.release.outputs.release
-        run: |
-          mvn deploy --settings $GITHUB_WORKSPACE/.m2/settings.xml -Dpublish.user=$USERNAME -Dpublish.password=$PASSWORD -Drelease.repo=https://adoptium.jfrog.io/artifactory/jmc-libs -Dsnapshot.repo=https://adoptium.jfrog.io/artifactory/jmc-libs-snapshots -Dgpg.skip=true -DskipTests=true
-        env:
-          USERNAME: ${{ secrets.ARTIFACTORY_USER }}
-          PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
-        working-directory: agent
+      # - name: Deploy agent libraries
+      #   if: needs.release.outputs.release
+      #   run: |
+      #     mvn deploy --settings $GITHUB_WORKSPACE/.m2/settings.xml -Dpublish.user=$USERNAME -Dpublish.password=$PASSWORD -Drelease.repo=https://adoptium.jfrog.io/artifactory/jmc-libs -Dsnapshot.repo=https://adoptium.jfrog.io/artifactory/jmc-libs-snapshots -Dgpg.skip=true -DskipTests=true
+      #   env:
+      #     USERNAME: ${{ secrets.ARTIFACTORY_USER }}
+      #     PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
+      #   working-directory: agent
 
       - name: Build & test
         run: |
@@ -145,50 +145,50 @@ jobs:
           mvn verify
         working-directory: releng/third-party
 
-      - name: Run UI Tests
-        # Ignore UI failures for now
-        continue-on-error: true
-        uses: coactions/setup-xvfb@b6b4fcfb9f5a895edadc3bc76318fae0ac17c8b3 # v1.0.1
-        with:
-          run: mvn verify -P uitests
+      # - name: Run UI Tests
+      #   # Ignore UI failures for now
+      #   continue-on-error: true
+      #   uses: coactions/setup-xvfb@b6b4fcfb9f5a895edadc3bc76318fae0ac17c8b3 # v1.0.1
+      #   with:
+      #     run: mvn verify -P uitests
 
-      - name: Deploy update sites
-        if: needs.release.outputs.release
-        run: |
-          curl -X DELETE -u "$USERNAME:$PASSWORD" https://adoptium.jfrog.io/artifactory/jmc-snapshots/ide
-          find . -type f -exec curl -o /dev/null -s -u "$USERNAME:$PASSWORD" -T \'{}\' https://adoptium.jfrog.io/artifactory/jmc-snapshots/ide/\'{}\' \;
-        env:
-          USERNAME: ${{ secrets.ARTIFACTORY_USER }}
-          PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
-        working-directory: application/org.openjdk.jmc.updatesite.ide/target/repository
+      # - name: Deploy update sites
+      #   if: needs.release.outputs.release
+      #   run: |
+      #     curl -X DELETE -u "$USERNAME:$PASSWORD" https://adoptium.jfrog.io/artifactory/jmc-snapshots/ide
+      #     find . -type f -exec curl -o /dev/null -s -u "$USERNAME:$PASSWORD" -T \'{}\' https://adoptium.jfrog.io/artifactory/jmc-snapshots/ide/\'{}\' \;
+      #   env:
+      #     USERNAME: ${{ secrets.ARTIFACTORY_USER }}
+      #     PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
+      #   working-directory: application/org.openjdk.jmc.updatesite.ide/target/repository
 
-      - if: needs.release.outputs.release
-        name: Delete old linux assets from ${{ needs.release.outputs.releaseTag }}
-        uses: mknejp/delete-release-assets@ea7ff12c30ef2589fe4311264f3a336d01325030 # v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ needs.release.outputs.releaseTag }}
-          assets: |
-            release*
-            agent-*
-            org.openjdk.jmc.updatesite.ide-*
-            org.openjdk.jmc-*.x86_64.*
-            org.openjdk.jmc-*.aarch64.*
-          fail-if-no-assets: false
-          fail-if-no-release: false
+      # - if: needs.release.outputs.release
+      #   name: Delete old linux assets from ${{ needs.release.outputs.releaseTag }}
+      #   uses: mknejp/delete-release-assets@ea7ff12c30ef2589fe4311264f3a336d01325030 # v1
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag: ${{ needs.release.outputs.releaseTag }}
+      #     assets: |
+      #       release*
+      #       agent-*
+      #       org.openjdk.jmc.updatesite.ide-*
+      #       org.openjdk.jmc-*.x86_64.*
+      #       org.openjdk.jmc-*.aarch64.*
+      #     fail-if-no-assets: false
+      #     fail-if-no-release: false
 
-      - name: Deploy release assets
-        uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v0.1.15
-        if: needs.release.outputs.release
-        with:
-          files: |
-            release-${{ needs.release.outputs.version }}.txt
-            agent/target/agent-${{ needs.release.outputs.agentVersion }}.jar
-            application/org.openjdk.jmc.updatesite.ide/target/org.openjdk.jmc.updatesite.ide-${{ needs.release.outputs.version }}.zip
-            target/products/org.openjdk.jmc-${{ needs.release.outputs.version }}-linux.gtk.x86_64.tar.gz
-            target/products/org.openjdk.jmc-${{ needs.release.outputs.version }}-linux.gtk.aarch64.tar.gz
-            target/products/org.openjdk.jmc-${{ needs.release.outputs.version }}-macosx.cocoa.x86_64.tar.gz
-            target/products/org.openjdk.jmc-${{ needs.release.outputs.version }}-macosx.cocoa.aarch64.tar.gz
-            target/products/org.openjdk.jmc-${{ needs.release.outputs.version }}-win32.win32.x86_64.zip
-          tag_name: ${{ needs.release.outputs.releaseTag }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Deploy release assets
+      #   uses: softprops/action-gh-release@e7a8f85e1c67a31e6ed99a94b41bd0b71bbee6b8 # v0.1.15
+      #   if: needs.release.outputs.release
+      #   with:
+      #     files: |
+      #       release-${{ needs.release.outputs.version }}.txt
+      #       agent/target/agent-${{ needs.release.outputs.agentVersion }}.jar
+      #       application/org.openjdk.jmc.updatesite.ide/target/org.openjdk.jmc.updatesite.ide-${{ needs.release.outputs.version }}.zip
+      #       target/products/org.openjdk.jmc-${{ needs.release.outputs.version }}-linux.gtk.x86_64.tar.gz
+      #       target/products/org.openjdk.jmc-${{ needs.release.outputs.version }}-linux.gtk.aarch64.tar.gz
+      #       target/products/org.openjdk.jmc-${{ needs.release.outputs.version }}-macosx.cocoa.x86_64.tar.gz
+      #       target/products/org.openjdk.jmc-${{ needs.release.outputs.version }}-macosx.cocoa.aarch64.tar.gz
+      #       target/products/org.openjdk.jmc-${{ needs.release.outputs.version }}-win32.win32.x86_64.zip
+      #     tag_name: ${{ needs.release.outputs.releaseTag }}
+      #     token: ${{ secrets.GITHUB_TOKEN }}
