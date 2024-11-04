@@ -87,6 +87,14 @@ jobs:
           distribution: temurin
           cache: 'maven'
           mvn-toolchain-id: 'JavaSE-17'
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b # v4.5.0
+        with:
+          java-version: 21
+          distribution: temurin
+          cache: 'maven'
+          mvn-toolchain-id: 'JavaSE-21'
 
       - name: Build & test core libraries
         run: |
