@@ -96,6 +96,7 @@ jobs:
           cache: 'maven'
           mvn-toolchain-id: 'JavaSE-21'
       
+      # Manually install Maven 3.9.9 because ubuntu-latest image uses Maven 3.8.8 by default
       # https://github.com/actions/setup-java/issues/685#issuecomment-2354724977
       - name: Install latest Maven
         run: |
@@ -111,29 +112,29 @@ jobs:
           mvn install
         working-directory: core
 
-      # - name: Deploy core libraries
-      #   if: needs.release.outputs.release
-      #   run: |
-      #     mvn deploy --settings $GITHUB_WORKSPACE/.m2/settings.xml -Dpublish.user=$USERNAME -Dpublish.password=$PASSWORD -Drelease.repo=https://adoptium.jfrog.io/artifactory/jmc-libs -Dsnapshot.repo=https://adoptium.jfrog.io/artifactory/jmc-libs-snapshots -Dgpg.skip=true -DskipTests=true
-      #   env:
-      #     USERNAME: ${{ secrets.ARTIFACTORY_USER }}
-      #     PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
-      #   working-directory: core
+      - name: Deploy core libraries
+        if: needs.release.outputs.release
+        run: |
+          mvn deploy --settings $GITHUB_WORKSPACE/.m2/settings.xml -Dpublish.user=$USERNAME -Dpublish.password=$PASSWORD -Drelease.repo=https://adoptium.jfrog.io/artifactory/jmc-libs -Dsnapshot.repo=https://adoptium.jfrog.io/artifactory/jmc-libs-snapshots -Dgpg.skip=true -DskipTests=true
+        env:
+          USERNAME: ${{ secrets.ARTIFACTORY_USER }}
+          PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
+        working-directory: core
 
-      # - name: Build & test agent
-      #   run: |
-      #     mvn verify
-      #     mvn install
-      #   working-directory: agent
+      - name: Build & test agent
+        run: |
+          mvn verify
+          mvn install
+        working-directory: agent
 
-      # - name: Deploy agent libraries
-      #   if: needs.release.outputs.release
-      #   run: |
-      #     mvn deploy --settings $GITHUB_WORKSPACE/.m2/settings.xml -Dpublish.user=$USERNAME -Dpublish.password=$PASSWORD -Drelease.repo=https://adoptium.jfrog.io/artifactory/jmc-libs -Dsnapshot.repo=https://adoptium.jfrog.io/artifactory/jmc-libs-snapshots -Dgpg.skip=true -DskipTests=true
-      #   env:
-      #     USERNAME: ${{ secrets.ARTIFACTORY_USER }}
-      #     PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
-      #   working-directory: agent
+      - name: Deploy agent libraries
+        if: needs.release.outputs.release
+        run: |
+          mvn deploy --settings $GITHUB_WORKSPACE/.m2/settings.xml -Dpublish.user=$USERNAME -Dpublish.password=$PASSWORD -Drelease.repo=https://adoptium.jfrog.io/artifactory/jmc-libs -Dsnapshot.repo=https://adoptium.jfrog.io/artifactory/jmc-libs-snapshots -Dgpg.skip=true -DskipTests=true
+        env:
+          USERNAME: ${{ secrets.ARTIFACTORY_USER }}
+          PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
+        working-directory: agent
 
       - name: Build
         run: |
