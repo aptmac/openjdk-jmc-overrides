@@ -98,7 +98,6 @@ jobs:
 
       - name: Build & test core libraries
         run: |
-          mvn verify
           mvn install
         working-directory: core
 
